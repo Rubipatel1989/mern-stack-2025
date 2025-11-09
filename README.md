@@ -1,4 +1,15 @@
-# MERN Stack 2025
+# mern-stack-2025
+
+# Install Dependencies for Backend
+1. npm i express mongoose
+2. npm install -g nodemon
+
+# Execute program
+1. nodemon [backend]
+1. npm start [fornend]
+
+# Install React
+1. npx create-react-app front-end
 
 ## Backend Setup
 - Create a `backend/.env` file with the values shown below.
