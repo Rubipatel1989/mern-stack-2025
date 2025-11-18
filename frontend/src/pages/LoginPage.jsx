@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { Alert, Button, Card, Col, Container, Form, Row } from 'react-bootstrap';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useNavigate, Navigate, Link, useLocation } from 'react-router-dom';
 
 import { useAuth } from '../context/AuthContext';
 
 const LoginPage = () => {
   const { login, isAuthenticated, authError, loading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [formState, setFormState] = useState({
     email: '',
@@ -29,7 +30,8 @@ const LoginPage = () => {
 
     try {
       await login(formState);
-      navigate('/', { replace: true });
+      const from = location.state?.from || '/';
+      navigate(from, { replace: true });
     } catch (err) {
       setError(err.message || 'Invalid credentials');
     }
@@ -41,9 +43,9 @@ const LoginPage = () => {
         <Col xs={11} sm={8} md={6} lg={4}>
           <Card className="shadow-sm">
             <Card.Body>
-              <h3 className="mb-3 text-center">Admin Login</h3>
+              <h3 className="mb-3 text-center">Login</h3>
               <p className="text-muted text-center mb-4">
-                Use your email and password to access the admin dashboard.
+                Sign in to your account
               </p>
 
               {(error || authError) && (
@@ -84,7 +86,9 @@ const LoginPage = () => {
               </Form>
             </Card.Body>
             <Card.Footer className="text-muted small text-center">
-              Roles with access: Superadmin, Admin
+              <div>
+                Don't have an account? <Link to="/signup">Sign up</Link>
+              </div>
             </Card.Footer>
           </Card>
         </Col>

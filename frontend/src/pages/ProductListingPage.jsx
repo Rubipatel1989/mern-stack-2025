@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Badge, Button, Card, Col, Container, Form, Row, Spinner, Alert } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 import AppNavbar from '../components/AppNavbar';
 import { useAuth } from '../context/AuthContext';
@@ -11,6 +11,7 @@ const ProductListingPage = () => {
   const { isAuthenticated } = useAuth();
   const { refreshCart } = useCart();
   const navigate = useNavigate();
+  const location = useLocation();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [addingToCart, setAddingToCart] = useState(null);
@@ -76,7 +77,7 @@ const ProductListingPage = () => {
 
   const handleAddToCart = async (productId) => {
     if (!isAuthenticated) {
-      navigate('/login');
+      navigate('/login', { state: { from: location.pathname } });
       return;
     }
 

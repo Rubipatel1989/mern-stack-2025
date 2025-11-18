@@ -45,6 +45,10 @@ const userSchema = new mongoose.Schema(
       ref: 'Role',
       required: [true, 'Role is required'],
     },
+    profilePicture: {
+      type: String,
+      trim: true,
+    },
   },
   {
     timestamps: true,

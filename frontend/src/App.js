@@ -11,6 +11,8 @@ import OrdersPage from './pages/OrdersPage';
 import OrderDetailPage from './pages/OrderDetailPage';
 import InvoicePage from './pages/InvoicePage';
 import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
+import ProfilePage from './pages/ProfilePage';
 import UnauthorizedPage from './pages/UnauthorizedPage';
 
 import './App.css';
@@ -21,15 +23,17 @@ function App() {
       <CartProvider>
         <BrowserRouter>
         <Routes>
-          <Route path="/" element={<DashboardPage />} />
-          <Route path="/products" element={<ProductsPage />} />
-          <Route path="/shop" element={<ProductListingPage />} />
+          <Route path="/" element={<ProductListingPage />} />
+          <Route path="/admin" element={<DashboardPage />} />
+          <Route path="/admin/products" element={<ProductsPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/orders/:id" element={<OrderDetailPage />} />
           <Route path="/invoices/:id" element={<InvoicePage />} />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

@@ -42,7 +42,7 @@ const CheckoutPage = () => {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate('/login');
+      navigate('/login', { state: { from: '/checkout' } });
       return;
     }
     fetchCart();

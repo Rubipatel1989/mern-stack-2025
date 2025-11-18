@@ -106,3 +106,67 @@ exports.registerSuperAdmin = asyncHandler(async (req, res) => {
   });
 });
 
+exports.register = asyncHandler(async (req, res) => {
+  const { name, email, password, phone, dob, address } = req.body;
+
+  if (!name || !email || !password) {
+    return sendError(res, {
+      message: 'Name, email, and password are required',
+      statusCode: 400,
+    });
+  }
+
+  const existing = await User.findOne({ email: email.toLowerCase() });
+  if (existing) {
+    return sendError(res, {
+      message: 'User already exists with this email',
+      statusCode: 409,
+    });
+  }
+
+  let role = await Role.findOne({ name: 'customer' });
+
+  if (!role) {
+    role = await Role.create({ name: 'customer', description: 'Customer' });
+  }
+
+  const userData = {
+    name,
+    email,
+    password,
+    phone,
+    role: role._id,
+  };
+
+  if (dob) {
+    const { parseDob, calculateAge } = require('../utils/date');
+    try {
+      userData.dateOfBirth = parseDob(dob);
+      userData.age = calculateAge(userData.dateOfBirth);
+    } catch (error) {
+      return sendError(res, {
+        message: error.message,
+        statusCode: 400,
+      });
+    }
+  }
+
+  if (address) {
+    userData.address = address;
+  }
+
+  const user = await User.create(userData);
+
+  const populated = await user.populate('role', 'name');
+  const token = generateToken(buildTokenPayload(populated));
+
+  sendSuccess(res, {
+    data: {
+      token,
+      user: populated,
+    },
+    message: 'Registration successful',
+    statusCode: 201,
+  });
+});
+
