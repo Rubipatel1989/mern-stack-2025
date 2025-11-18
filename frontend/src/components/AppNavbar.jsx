@@ -22,6 +22,8 @@ const AppNavbar = () => {
             <Nav.Link onClick={() => navigate('/')}>Users</Nav.Link>
             <Nav.Link onClick={() => navigate('/products')}>Products</Nav.Link>
             <Nav.Link onClick={() => navigate('/shop')}>Shop</Nav.Link>
+            <Nav.Link onClick={() => navigate('/cart')}>Cart</Nav.Link>
+            <Nav.Link onClick={() => navigate('/orders')}>Orders</Nav.Link>
           </Nav>
           <div className="d-flex align-items-center gap-3 text-light">
             {user && (

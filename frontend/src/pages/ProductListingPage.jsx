@@ -1,12 +1,18 @@
 import { useEffect, useState } from 'react';
-import { Badge, Button, Card, Col, Container, Form, Row, Spinner } from 'react-bootstrap';
+import { Badge, Button, Card, Col, Container, Form, Row, Spinner, Alert } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 
 import AppNavbar from '../components/AppNavbar';
+import { useAuth } from '../context/AuthContext';
 import api from '../api/client';
 
 const ProductListingPage = () => {
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [addingToCart, setAddingToCart] = useState(null);
+  const [cartMessage, setCartMessage] = useState(null);
   const [filters, setFilters] = useState({
     search: '',
     category: '',
@@ -64,6 +70,26 @@ const ProductListingPage = () => {
   const handlePageChange = (newPage) => {
     fetchProducts(newPage);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleAddToCart = async (productId) => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+
+    setAddingToCart(productId);
+    setCartMessage(null);
+    try {
+      await api.post('/cart/add', { productId, quantity: 1 });
+      setCartMessage({ type: 'success', text: 'Added to cart!' });
+      setTimeout(() => setCartMessage(null), 3000);
+    } catch (error) {
+      setCartMessage({ type: 'danger', text: error.message || 'Failed to add to cart' });
+      setTimeout(() => setCartMessage(null), 3000);
+    } finally {
+      setAddingToCart(null);
+    }
   };
 
   return (
@@ -152,6 +178,16 @@ const ProductListingPage = () => {
 
           {/* Products Grid */}
           <Col xs={12} md={9}>
+            {cartMessage && (
+              <Alert
+                variant={cartMessage.type}
+                dismissible
+                onClose={() => setCartMessage(null)}
+                className="mb-3"
+              >
+                {cartMessage.text}
+              </Alert>
+            )}
             {loading ? (
               <div className="text-center py-5">
                 <Spinner animation="border" role="status" />
@@ -220,8 +256,20 @@ const ProductListingPage = () => {
                               <small className="text-muted">
                                 Stock: {product.stock ?? 0}
                               </small>
-                              <Button size="sm" variant="primary">
-                                Add to Cart
+                              <Button
+                                size="sm"
+                                variant="primary"
+                                disabled={addingToCart === product._id || (product.stock ?? 0) === 0}
+                                onClick={() => handleAddToCart(product._id)}
+                              >
+                                {addingToCart === product._id ? (
+                                  <>
+                                    <Spinner size="sm" className="me-1" />
+                                    Adding...
+                                  </>
+                                ) : (
+                                  'Add to Cart'
+                                )}
                               </Button>
                             </div>
                           </div>
