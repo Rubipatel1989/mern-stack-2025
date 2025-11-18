@@ -66,6 +66,24 @@ const OrderDetailPage = () => {
     }
   };
 
+  const handleDownloadInvoice = async () => {
+    try {
+      const response = await api.get(`/invoices/${id}/download`, {
+        responseType: 'blob',
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `invoice-${order?.orderNumber || id}.html`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      setError(error.response?.data?.message || error.message || 'Failed to download invoice');
+    }
+  };
+
   const getStatusBadge = (status) => {
     const variants = {
       pending: 'warning',
@@ -118,13 +136,22 @@ const OrderDetailPage = () => {
               <h4>Order #{order.orderNumber}</h4>
               <div className="d-flex gap-2">
                 {order.status === 'approved' && (
-                  <Button
-                    variant="outline-success"
-                    onClick={() => navigate(`/invoices/${order._id}`)}
-                  >
-                    <FiFileText className="me-2" />
-                    View Invoice
-                  </Button>
+                  <>
+                    <Button
+                      variant="outline-success"
+                      onClick={() => navigate(`/invoices/${order._id}`)}
+                    >
+                      <FiFileText className="me-2" />
+                      View Invoice
+                    </Button>
+                    <Button
+                      variant="outline-primary"
+                      onClick={handleDownloadInvoice}
+                    >
+                      <FiFileText className="me-2" />
+                      Download Invoice
+                    </Button>
+                  </>
                 )}
                 <Button variant="outline-secondary" onClick={() => navigate('/orders')}>
                   Back to Orders

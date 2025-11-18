@@ -57,6 +57,24 @@ const OrdersPage = () => {
     return <Badge bg={variants[status] || 'secondary'}>{status.toUpperCase()}</Badge>;
   };
 
+  const handleDownloadInvoice = async (orderId, orderNumber) => {
+    try {
+      const response = await api.get(`/invoices/${orderId}/download`, {
+        responseType: 'blob',
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `invoice-${orderNumber || orderId}.html`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      setError(error.response?.data?.message || error.message || 'Failed to download invoice');
+    }
+  };
+
   if (loading) {
     return (
       <>
@@ -136,14 +154,25 @@ const OrdersPage = () => {
                               <FiEye />
                             </Button>
                             {order.status === 'approved' && (
-                              <Button
-                                size="sm"
-                                variant="outline-success"
-                                onClick={() => navigate(`/invoices/${order._id}`)}
-                                title="View Invoice"
-                              >
-                                <FiFileText />
-                              </Button>
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="outline-success"
+                                  onClick={() => navigate(`/invoices/${order._id}`)}
+                                  title="View Invoice"
+                                  className="me-1"
+                                >
+                                  <FiFileText />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline-primary"
+                                  onClick={() => handleDownloadInvoice(order._id, order.orderNumber)}
+                                  title="Download Invoice"
+                                >
+                                  <FiFileText />
+                                </Button>
+                              </>
                             )}
                           </div>
                         </td>

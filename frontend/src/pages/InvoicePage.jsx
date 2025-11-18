@@ -85,7 +85,7 @@ const InvoicePage = () => {
             Open Invoice
           </Button>
           <Button variant="outline-primary" className="ms-2" onClick={handleDownload}>
-            Print / Save as PDF
+            Download Invoice
           </Button>
         </div>
       </Container>

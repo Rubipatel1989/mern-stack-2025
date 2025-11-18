@@ -259,7 +259,13 @@ const ProductsPage = () => {
             {products.map((item) => (
               <tr key={item._id}>
                 <td>{item.name}</td>
-                <td>{item.category?.name || item.category || '-'}</td>
+                <td>
+                  {typeof item.category === 'object' && item.category?.name
+                    ? item.category.name
+                    : typeof item.category === 'string'
+                      ? item.category
+                      : '-'}
+                </td>
                 <td>${item.price?.toFixed(2) || '0.00'}</td>
                 <td>{item.stock ?? 0}</td>
                 <td>

@@ -267,7 +267,13 @@ const ProductListingPage = () => {
                               </Badge>
                             )}
                             {product.category && (
-                              <Badge bg="secondary">{product.category}</Badge>
+                              <Badge bg="secondary">
+                                {typeof product.category === 'object' && product.category?.name
+                                  ? product.category.name
+                                  : typeof product.category === 'string'
+                                    ? product.category
+                                    : 'Uncategorized'}
+                              </Badge>
                             )}
                           </div>
                           <Card.Title className="h6">{product.name}</Card.Title>
