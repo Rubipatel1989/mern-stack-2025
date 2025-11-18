@@ -41,6 +41,9 @@ const ProductsPage = () => {
   // data
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
+  const [vendors, setVendors] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loadingMasters, setLoadingMasters] = useState(false);
 
   // ui state
   const [formState, setFormState] = useState(initialFormState);
@@ -75,6 +78,31 @@ const ProductsPage = () => {
       setLoadingProducts(false);
     }
   };
+
+  const fetchVendors = async () => {
+    try {
+      const { data } = await api.get('/vendors', { params: { status: 'active' } });
+      setVendors(data?.data || []);
+    } catch (error) {
+      console.error('Failed to fetch vendors:', error);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const { data } = await api.get('/categories', { params: { status: 'active' } });
+      setCategories(data?.data || []);
+    } catch (error) {
+      console.error('Failed to fetch categories:', error);
+    }
+  };
+
+  useEffect(() => {
+    setLoadingMasters(true);
+    Promise.all([fetchVendors(), fetchCategories()]).finally(() => {
+      setLoadingMasters(false);
+    });
+  }, []);
 
   useEffect(() => {
     fetchProducts();
@@ -129,14 +157,14 @@ const ProductsPage = () => {
       price: Number(formState.price),
       compareAtPrice: formState.compareAtPrice ? Number(formState.compareAtPrice) : undefined,
       sku: formState.sku,
-      category: formState.category,
+      category: formState.category || undefined,
       tags: formState.tags ? formState.tags.split(',').map((t) => t.trim()).filter(Boolean) : [],
       images: formState.images ? formState.images.split(',').map((i) => i.trim()).filter(Boolean) : [],
       stock: formState.stock ? Number(formState.stock) : 0,
       status: formState.status,
       featured: formState.featured,
       weight: formState.weight ? Number(formState.weight) : undefined,
-      vendor: formState.vendor,
+      vendor: formState.vendor || undefined,
     };
 
     const isUpdate = isEditing && editingProductId;
@@ -174,14 +202,14 @@ const ProductsPage = () => {
       price: product.price || '',
       compareAtPrice: product.compareAtPrice || '',
       sku: product.sku || '',
-      category: product.category || '',
+      category: product.category?._id || product.category || '',
       tags: product.tags?.join(', ') || '',
       images: product.images?.join(', ') || '',
       stock: product.stock || '',
       status: product.status || 'active',
       featured: product.featured || false,
       weight: product.weight || '',
-      vendor: product.vendor || '',
+      vendor: product.vendor?._id || product.vendor || '',
     });
     setIsDrawerOpen(true);
   };
@@ -231,7 +259,7 @@ const ProductsPage = () => {
             {products.map((item) => (
               <tr key={item._id}>
                 <td>{item.name}</td>
-                <td>{item.category || '-'}</td>
+                <td>{item.category?.name || item.category || '-'}</td>
                 <td>${item.price?.toFixed(2) || '0.00'}</td>
                 <td>{item.stock ?? 0}</td>
                 <td>
@@ -424,13 +452,19 @@ const ProductsPage = () => {
             <Col sm={12} md={6}>
               <Form.Group controlId="category">
                 <Form.Label>Category</Form.Label>
-                <Form.Control
+                <Form.Select
                   name="category"
                   value={formState.category}
                   onChange={handleChange}
-                  placeholder="Electronics, Clothing, etc."
                   disabled={!canManageProducts}
-                />
+                >
+                  <option value="">Select Category</option>
+                  {categories.map((cat) => (
+                    <option key={cat._id} value={cat._id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </Form.Select>
               </Form.Group>
             </Col>
             <Col sm={12} md={6}>
@@ -504,13 +538,19 @@ const ProductsPage = () => {
             <Col sm={12} md={6}>
               <Form.Group controlId="vendor">
                 <Form.Label>Vendor</Form.Label>
-                <Form.Control
+                <Form.Select
                   name="vendor"
                   value={formState.vendor}
                   onChange={handleChange}
-                  placeholder="Vendor name"
                   disabled={!canManageProducts}
-                />
+                >
+                  <option value="">Select Vendor</option>
+                  {vendors.map((vendor) => (
+                    <option key={vendor._id} value={vendor._id}>
+                      {vendor.name}
+                    </option>
+                  ))}
+                </Form.Select>
               </Form.Group>
             </Col>
             <Col sm={12}>

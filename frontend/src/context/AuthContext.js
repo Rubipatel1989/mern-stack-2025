@@ -57,6 +57,33 @@ export const AuthProvider = ({ children }) => {
         token: data?.data?.token,
         user: data?.data?.user,
       });
+      
+      // Merge guest cart after login
+      const guestCartKey = 'guest_cart';
+      const guestCart = localStorage.getItem(guestCartKey);
+      if (guestCart) {
+        try {
+          const parsedCart = JSON.parse(guestCart);
+          if (parsedCart.items && parsedCart.items.length > 0) {
+            // Merge guest cart items to user cart
+            for (const item of parsedCart.items) {
+              try {
+                await api.post('/cart/add', {
+                  productId: item.productId || item.product?._id,
+                  quantity: item.quantity || 1,
+                });
+              } catch (err) {
+                console.warn('Failed to merge cart item:', err);
+              }
+            }
+            // Clear guest cart after merge
+            localStorage.removeItem(guestCartKey);
+          }
+        } catch (err) {
+          console.warn('Failed to merge guest cart:', err);
+        }
+      }
+      
       return data;
     } catch (error) {
       setAuthError(error.message);

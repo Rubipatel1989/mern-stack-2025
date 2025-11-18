@@ -20,7 +20,7 @@ import api from '../api/client';
 
 const CartPage = () => {
   const { isAuthenticated } = useAuth();
-  const { refreshCart } = useCart();
+  const { refreshCart, getGuestCart, saveGuestCart } = useCart();
   const navigate = useNavigate();
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -31,8 +31,14 @@ const CartPage = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.get('/cart');
-      setCart(data?.data);
+      if (isAuthenticated) {
+        const { data } = await api.get('/cart');
+        setCart(data?.data);
+      } else {
+        // Load guest cart from localStorage
+        const guestCart = getGuestCart();
+        setCart(guestCart);
+      }
     } catch (error) {
       setError(error.message || 'Failed to load cart');
     } finally {
@@ -41,20 +47,28 @@ const CartPage = () => {
   };
 
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchCart();
-    } else {
-      navigate('/login');
-    }
-  }, [isAuthenticated, navigate]);
+    fetchCart();
+  }, [isAuthenticated]);
 
   const handleUpdateQuantity = async (itemId, newQuantity) => {
     if (newQuantity < 1) return;
     setUpdating(itemId);
     try {
-      await api.put(`/cart/item/${itemId}`, { quantity: newQuantity });
-      await fetchCart();
-      refreshCart(); // Update cart count in navbar
+      if (isAuthenticated) {
+        await api.put(`/cart/item/${itemId}`, { quantity: newQuantity });
+        await fetchCart();
+        refreshCart();
+      } else {
+        // Update guest cart
+        const guestCart = getGuestCart();
+        const itemIndex = guestCart.items.findIndex(item => item.productId === itemId || item._id === itemId);
+        if (itemIndex > -1) {
+          guestCart.items[itemIndex].quantity = newQuantity;
+          saveGuestCart(guestCart);
+          setCart(guestCart);
+          refreshCart();
+        }
+      }
     } catch (error) {
       setError(error.message || 'Failed to update quantity');
     } finally {
@@ -65,9 +79,18 @@ const CartPage = () => {
   const handleRemoveItem = async (itemId) => {
     setUpdating(itemId);
     try {
-      await api.delete(`/cart/item/${itemId}`);
-      await fetchCart();
-      refreshCart(); // Update cart count in navbar
+      if (isAuthenticated) {
+        await api.delete(`/cart/item/${itemId}`);
+        await fetchCart();
+        refreshCart();
+      } else {
+        // Remove from guest cart
+        const guestCart = getGuestCart();
+        guestCart.items = guestCart.items.filter(item => (item.productId !== itemId && item._id !== itemId));
+        saveGuestCart(guestCart);
+        setCart(guestCart);
+        refreshCart();
+      }
     } catch (error) {
       setError(error.message || 'Failed to remove item');
     } finally {
@@ -82,6 +105,14 @@ const CartPage = () => {
       const quantity = item.quantity || 0;
       return total + price * quantity;
     }, 0);
+  };
+
+  const handleCheckout = () => {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: '/checkout' } });
+      return;
+    }
+    navigate('/checkout');
   };
 
   if (loading) {
@@ -249,7 +280,7 @@ const CartPage = () => {
                   <Button
                     variant="primary"
                     size="lg"
-                    onClick={() => navigate('/checkout')}
+                    onClick={handleCheckout}
                   >
                     Proceed to Checkout
                   </Button>

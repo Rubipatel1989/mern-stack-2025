@@ -9,7 +9,8 @@ import api from '../api/client';
 
 const ProductListingPage = () => {
   const { isAuthenticated } = useAuth();
-  const { refreshCart } = useCart();
+  const cartContext = useCart();
+  const { refreshCart } = cartContext;
   const navigate = useNavigate();
   const location = useLocation();
   const [products, setProducts] = useState([]);
@@ -76,17 +77,49 @@ const ProductListingPage = () => {
   };
 
   const handleAddToCart = async (productId) => {
-    if (!isAuthenticated) {
-      navigate('/login', { state: { from: location.pathname } });
-      return;
-    }
-
     setAddingToCart(productId);
     setCartMessage(null);
+    
     try {
-      await api.post('/cart/add', { productId, quantity: 1 });
-      setCartMessage({ type: 'success', text: 'Added to cart!' });
-      refreshCart(); // Update cart count in navbar
+      if (!isAuthenticated) {
+        // Guest cart - store in localStorage
+        const { getGuestCart, saveGuestCart } = cartContext;
+        const guestCart = getGuestCart();
+        const product = products.find(p => p._id === productId);
+        
+        if (!product) {
+          throw new Error('Product not found');
+        }
+        
+        const existingItemIndex = guestCart.items.findIndex(
+          item => item.productId === productId
+        );
+        
+        if (existingItemIndex > -1) {
+          guestCart.items[existingItemIndex].quantity += 1;
+        } else {
+          guestCart.items.push({
+            productId,
+            product: {
+              _id: product._id,
+              name: product.name,
+              price: product.price,
+              images: product.images,
+            },
+            quantity: 1,
+            price: product.price,
+          });
+        }
+        
+        saveGuestCart(guestCart);
+        setCartMessage({ type: 'success', text: 'Added to cart!' });
+        refreshCart();
+      } else {
+        // Authenticated user - use API
+        await api.post('/cart/add', { productId, quantity: 1 });
+        setCartMessage({ type: 'success', text: 'Added to cart!' });
+        refreshCart();
+      }
       setTimeout(() => setCartMessage(null), 3000);
     } catch (error) {
       setCartMessage({ type: 'danger', text: error.message || 'Failed to add to cart' });

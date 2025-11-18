@@ -13,6 +13,8 @@ import InvoicePage from './pages/InvoicePage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import ProfilePage from './pages/ProfilePage';
+import VendorsPage from './pages/VendorsPage';
+import CategoriesPage from './pages/CategoriesPage';
 import UnauthorizedPage from './pages/UnauthorizedPage';
 
 import './App.css';
@@ -26,6 +28,8 @@ function App() {
           <Route path="/" element={<ProductListingPage />} />
           <Route path="/admin" element={<DashboardPage />} />
           <Route path="/admin/products" element={<ProductsPage />} />
+          <Route path="/admin/vendors" element={<VendorsPage />} />
+          <Route path="/admin/categories" element={<CategoriesPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/orders" element={<OrdersPage />} />

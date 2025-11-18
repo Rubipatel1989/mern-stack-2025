@@ -8,6 +8,8 @@ const productRoutes = require('./routes/product.routes');
 const cartRoutes = require('./routes/cart.routes');
 const orderRoutes = require('./routes/order.routes');
 const invoiceRoutes = require('./routes/invoice.routes');
+const vendorRoutes = require('./routes/vendor.routes');
+const categoryRoutes = require('./routes/category.routes');
 const notFound = require('./middlewares/notFound');
 const errorHandler = require('./middlewares/errorHandler');
 
@@ -30,6 +32,8 @@ app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/invoices', invoiceRoutes);
+app.use('/api/vendors', vendorRoutes);
+app.use('/api/categories', categoryRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

@@ -58,6 +58,8 @@ exports.createProduct = asyncHandler(async (req, res) => {
   };
 
   const product = await Product.create(productData);
+  await product.populate('category', 'name');
+  await product.populate('vendor', 'name');
 
   sendSuccess(res, {
     data: product,
@@ -83,7 +85,11 @@ exports.getProducts = asyncHandler(async (req, res) => {
   const query = {};
 
   if (category) {
-    query.category = new RegExp(category, 'i');
+    if (mongoose.Types.ObjectId.isValid(category)) {
+      query.category = category;
+    } else {
+      query.category = new RegExp(category, 'i');
+    }
   }
 
   if (status) {
@@ -113,14 +119,61 @@ exports.getProducts = asyncHandler(async (req, res) => {
 
   const skip = (Number(page) - 1) * Number(limit);
 
-  const [products, total] = await Promise.all([
-    Product.find(query)
-      .sort(sortOptions)
-      .skip(skip)
-      .limit(Number(limit))
-      .lean(),
-    Product.countDocuments(query),
+  // Fetch products without populate first to avoid ObjectId casting errors
+  let products = await Product.find(query)
+    .sort(sortOptions)
+    .skip(skip)
+    .limit(Number(limit))
+    .lean();
+  
+  // Manually populate only valid ObjectIds (in parallel for better performance)
+  const Category = require('../models/category.model');
+  const Vendor = require('../models/vendor.model');
+  
+  // Collect unique category and vendor IDs
+  const categoryIds = new Set();
+  const vendorIds = new Set();
+  
+  products.forEach((product) => {
+    if (product.category && mongoose.Types.ObjectId.isValid(product.category)) {
+      categoryIds.add(product.category.toString());
+    }
+    if (product.vendor && mongoose.Types.ObjectId.isValid(product.vendor)) {
+      vendorIds.add(product.vendor.toString());
+    }
+  });
+  
+  // Fetch all categories and vendors in parallel
+  const [categories, vendors] = await Promise.all([
+    categoryIds.size > 0
+      ? Category.find({ _id: { $in: Array.from(categoryIds) } }).select('name').lean()
+      : [],
+    vendorIds.size > 0
+      ? Vendor.find({ _id: { $in: Array.from(vendorIds) } }).select('name').lean()
+      : [],
   ]);
+  
+  // Create lookup maps
+  const categoryMap = new Map(categories.map((cat) => [cat._id.toString(), cat]));
+  const vendorMap = new Map(vendors.map((ven) => [ven._id.toString(), ven]));
+  
+  // Populate products
+  products.forEach((product) => {
+    if (product.category && mongoose.Types.ObjectId.isValid(product.category)) {
+      const category = categoryMap.get(product.category.toString());
+      if (category) {
+        product.category = category;
+      }
+    }
+    if (product.vendor && mongoose.Types.ObjectId.isValid(product.vendor)) {
+      const vendor = vendorMap.get(product.vendor.toString());
+      if (vendor) {
+        product.vendor = vendor;
+      }
+    }
+  });
+  
+  const total = await Product.countDocuments(query);
 
   if (!products.length) {
     return sendNotFound(res, { message: 'No products found' });
@@ -145,7 +198,9 @@ exports.getProductById = asyncHandler(async (req, res) => {
     return sendError(res, { message: 'Invalid product id', statusCode: 400 });
   }
 
-  const product = await Product.findById(id);
+  const product = await Product.findById(id)
+    .populate('category', 'name')
+    .populate('vendor', 'name');
 
   if (!product) {
     return sendNotFound(res, { message: 'Product not found' });
@@ -190,7 +245,9 @@ exports.updateProduct = asyncHandler(async (req, res) => {
   const product = await Product.findByIdAndUpdate(id, updates, {
     new: true,
     runValidators: true,
-  });
+  })
+    .populate('category', 'name')
+    .populate('vendor', 'name');
 
   if (!product) {
     return sendNotFound(res, { message: 'Product not found' });

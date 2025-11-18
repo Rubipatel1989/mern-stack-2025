@@ -28,8 +28,8 @@ const productSchema = new mongoose.Schema(
       sparse: true,
     },
     category: {
-      type: String,
-      trim: true,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Category',
       index: true,
     },
     tags: [
@@ -69,8 +69,9 @@ const productSchema = new mongoose.Schema(
       height: { type: Number, min: 0 },
     },
     vendor: {
-      type: String,
-      trim: true,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Vendor',
+      index: true,
     },
     seo: {
       title: { type: String, trim: true },
