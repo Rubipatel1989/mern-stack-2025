@@ -1,5 +1,4 @@
 **Q1: Explain the difference between goroutines and OS threads. What's the Go scheduler (G-M-P model)?**
-
 **Answer:**
 - Goroutines are lightweight (2KB stack), managed by Go runtime; OS threads are managed by the OS (1-8MB).
 - G-M-P: G (goroutines), M (OS threads), P (logical processors). P maps to M; Gs are executed by M via P.
