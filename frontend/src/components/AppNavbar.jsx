@@ -1,13 +1,15 @@
 import { Navbar, Nav, Button, Container, Badge } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { FiShoppingCart } from 'react-icons/fi';
+import { FiShoppingCart, FiMoon, FiSun } from 'react-icons/fi';
 
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { useTheme } from '../context/ThemeContext';
 
 const AppNavbar = () => {
   const { user, logout } = useAuth();
   const { cartCount } = useCart();
+  const { isDarkMode, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -19,7 +21,17 @@ const AppNavbar = () => {
   const isCustomer = user?.role?.name?.toLowerCase() === 'customer';
 
   return (
-    <Navbar bg="light" variant="light" expand="lg" className="mb-4" style={{ backgroundColor: '#f8f9fa', borderBottom: '1px solid #dee2e6' }}>
+    <Navbar 
+      bg={isDarkMode ? 'dark' : 'light'} 
+      variant={isDarkMode ? 'dark' : 'light'} 
+      expand="lg" 
+      className="mb-4 theme-navbar" 
+      style={{ 
+        backgroundColor: isDarkMode ? '#212529' : '#f8f9fa', 
+        borderBottom: `1px solid ${isDarkMode ? '#495057' : '#dee2e6'}`,
+        transition: 'background-color 0.3s ease, border-color 0.3s ease'
+      }}
+    >
       <Container fluid>
         <Navbar.Brand onClick={() => navigate('/')} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}>
           <img 
@@ -36,7 +48,7 @@ const AppNavbar = () => {
               e.target.style.display = 'none';
             }}
           />
-          {isAdmin && <span className="d-none d-md-inline" style={{ color: '#333' }}>Admin Panel</span>}
+          {isAdmin && <span className="d-none d-md-inline" style={{ color: isDarkMode ? '#fff' : '#333' }}>Admin Panel</span>}
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
@@ -67,7 +79,7 @@ const AppNavbar = () => {
               <Nav.Link
                 onClick={() => navigate('/cart')}
                 className="d-flex align-items-center position-relative"
-                style={{ cursor: 'pointer', color: '#333' }}
+                style={{ cursor: 'pointer', color: isDarkMode ? '#fff' : '#333' }}
               >
                 <FiShoppingCart size={20} />
                 {cartCount > 0 && (
@@ -91,7 +103,22 @@ const AppNavbar = () => {
               </Nav.Link>
             </Nav>
           )}
-          <div className="d-flex align-items-center gap-3" style={{ color: '#333' }}>
+          <div className="d-flex align-items-center gap-3" style={{ color: isDarkMode ? '#fff' : '#333' }}>
+            {/* Dark Mode Toggle */}
+            <Button
+              variant="outline-secondary"
+              size="sm"
+              onClick={toggleTheme}
+              style={{
+                minWidth: '40px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              {isDarkMode ? <FiSun size={18} /> : <FiMoon size={18} />}
+            </Button>
             {user ? (
               <>
                 {user.profilePicture ? (

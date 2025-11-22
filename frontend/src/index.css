@@ -5,9 +5,132 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+/* Light Mode (Default) */
+body.light-mode {
+  background-color: #f5f6fa;
+  color: #212529;
+}
+
+/* Dark Mode */
+body.dark-mode {
+  background-color: #121212;
+  color: #e0e0e0;
+}
+
+/* Dark Mode Styles for Cards and Components */
+.dark-mode .card {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+  border-color: #333;
+}
+
+.dark-mode .card-header {
+  background-color: #2a2a2a;
+  border-color: #333;
+  color: #e0e0e0;
+}
+
+.dark-mode .form-control {
+  background-color: #2a2a2a;
+  border-color: #444;
+  color: #e0e0e0;
+}
+
+.dark-mode .form-control:focus {
+  background-color: #2a2a2a;
+  border-color: #0d6efd;
+  color: #e0e0e0;
+}
+
+.dark-mode .form-select {
+  background-color: #2a2a2a;
+  border-color: #444;
+  color: #e0e0e0;
+}
+
+.dark-mode .form-select:focus {
+  background-color: #2a2a2a;
+  border-color: #0d6efd;
+  color: #e0e0e0;
+}
+
+.dark-mode .table {
+  color: #e0e0e0;
+}
+
+.dark-mode .table-striped > tbody > tr:nth-of-type(odd) > td {
+  background-color: #2a2a2a;
+}
+
+.dark-mode .table-bordered {
+  border-color: #444;
+}
+
+.dark-mode .table-bordered td,
+.dark-mode .table-bordered th {
+  border-color: #444;
+}
+
+.dark-mode .alert {
+  background-color: #2a2a2a;
+  border-color: #444;
+  color: #e0e0e0;
+}
+
+.dark-mode .list-group-item {
+  background-color: #1e1e1e;
+  border-color: #333;
+  color: #e0e0e0;
+}
+
+.dark-mode .modal-content {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+}
+
+.dark-mode .modal-header {
+  border-color: #333;
+}
+
+.dark-mode .modal-footer {
+  border-color: #333;
+}
+
+.dark-mode .dropdown-menu {
+  background-color: #2a2a2a;
+  border-color: #444;
+}
+
+.dark-mode .dropdown-item {
+  color: #e0e0e0;
+}
+
+.dark-mode .dropdown-item:hover {
+  background-color: #333;
+  color: #fff;
+}
+
+.dark-mode .text-muted {
+  color: #aaa !important;
+}
+
+.dark-mode .bg-light {
+  background-color: #2a2a2a !important;
+}
+
+.dark-mode .border {
+  border-color: #444 !important;
+}
+
+/* Smooth transitions */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
