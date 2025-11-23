@@ -23,7 +23,9 @@ const AddressesPage = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [addresses, setAddresses] = useState([]);
+  const [states, setStates] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadingStates, setLoadingStates] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -41,6 +43,7 @@ const AddressesPage = () => {
     country: 'India',
     isDefault: false,
   });
+  const [formErrors, setFormErrors] = useState({});
 
   const drawerRef = useRef(null);
   const overlayRef = useRef(null);
@@ -51,7 +54,20 @@ const AddressesPage = () => {
       return;
     }
     fetchAddresses();
+    fetchStates();
   }, [isAuthenticated, navigate]);
+
+  const fetchStates = async () => {
+    setLoadingStates(true);
+    try {
+      const { data } = await api.get('/states', { params: { status: 'active' } });
+      setStates(data?.data || []);
+    } catch (error) {
+      console.error('Failed to load states:', error);
+    } finally {
+      setLoadingStates(false);
+    }
+  };
 
   useEffect(() => {
     if (showModal) {
@@ -128,16 +144,49 @@ const AddressesPage = () => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormState((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
+    
+    // Phone validation - only allow digits and limit to 10
+    if (name === 'phone') {
+      const phoneValue = value.replace(/\D/g, '').slice(0, 10);
+      setFormState((prev) => ({
+        ...prev,
+        [name]: phoneValue,
+      }));
+      // Clear error when user starts typing
+      if (formErrors.phone) {
+        setFormErrors((prev) => ({ ...prev, phone: '' }));
+      }
+    } else {
+      setFormState((prev) => ({
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value,
+      }));
+    }
+  };
+
+  const validateForm = () => {
+    const errors = {};
+    
+    // Phone validation - must be exactly 10 digits
+    if (formState.phone && formState.phone.length !== 10) {
+      errors.phone = 'Phone number must be exactly 10 digits';
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     setSuccess(null);
+    setFormErrors({});
+
+    // Validate form
+    if (!validateForm()) {
+      setError('Please fix the form errors');
+      return;
+    }
 
     try {
       if (editingAddress) {
@@ -493,13 +542,25 @@ const AddressesPage = () => {
                   </Form.Group>
 
                   <Form.Group className="mb-3">
-                    <Form.Label>Phone</Form.Label>
+                    <Form.Label>Phone *</Form.Label>
                     <Form.Control
-                      type="tel"
+                      type="text"
                       name="phone"
                       value={formState.phone}
                       onChange={handleChange}
+                      placeholder="Enter 10 digit phone number"
+                      maxLength={10}
+                      required
+                      isInvalid={!!formErrors.phone}
                     />
+                    {formErrors.phone && (
+                      <Form.Control.Feedback type="invalid">
+                        {formErrors.phone}
+                      </Form.Control.Feedback>
+                    )}
+                    <Form.Text className="text-muted">
+                      {formState.phone.length}/10 digits
+                    </Form.Text>
                   </Form.Group>
 
                   <Form.Group className="mb-3">
@@ -539,13 +600,26 @@ const AddressesPage = () => {
                     <Col md={6}>
                       <Form.Group className="mb-3">
                         <Form.Label>State *</Form.Label>
-                        <Form.Control
-                          type="text"
-                          name="state"
-                          value={formState.state}
-                          onChange={handleChange}
-                          required
-                        />
+                        {loadingStates ? (
+                          <Form.Control as="div">
+                            <Spinner size="sm" className="me-2" />
+                            Loading states...
+                          </Form.Control>
+                        ) : (
+                          <Form.Select
+                            name="state"
+                            value={formState.state}
+                            onChange={handleChange}
+                            required
+                          >
+                            <option value="">Select State</option>
+                            {states.map((state) => (
+                              <option key={state._id} value={state.name}>
+                                {state.name} ({state.code})
+                              </option>
+                            ))}
+                          </Form.Select>
+                        )}
                       </Form.Group>
                     </Col>
                   </Row>

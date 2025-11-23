@@ -24,6 +24,7 @@ const ProfilePage = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [states, setStates] = useState([]);
   const [formState, setFormState] = useState({
     name: '',
     email: '',
@@ -44,7 +45,17 @@ const ProfilePage = () => {
       return;
     }
     fetchProfile();
+    fetchStates();
   }, [isAuthenticated, navigate]);
+
+  const fetchStates = async () => {
+    try {
+      const { data } = await api.get('/states', { params: { status: 'active' } });
+      setStates(data?.data || []);
+    } catch (error) {
+      console.error('Failed to load states:', error);
+    }
+  };
 
   const fetchProfile = async () => {
     setLoading(true);
@@ -307,11 +318,18 @@ const ProfilePage = () => {
                     <Col sm={12} md={6}>
                       <Form.Group controlId="state">
                         <Form.Label>State</Form.Label>
-                        <Form.Control
+                        <Form.Select
                           name="state"
                           value={formState.state}
                           onChange={handleChange}
-                        />
+                        >
+                          <option value="">Select State</option>
+                          {states.map((state) => (
+                            <option key={state._id} value={state.name}>
+                              {state.name} ({state.code})
+                            </option>
+                          ))}
+                        </Form.Select>
                       </Form.Group>
                     </Col>
                     <Col sm={12} md={6}>

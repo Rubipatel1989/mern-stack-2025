@@ -18,7 +18,9 @@ import ProfilePage from './pages/ProfilePage';
 import AddressesPage from './pages/AddressesPage';
 import VendorsPage from './pages/VendorsPage';
 import CategoriesPage from './pages/CategoriesPage';
+import StatesPage from './pages/StatesPage';
 import CustomerActivityLogsPage from './pages/CustomerActivityLogsPage';
+import ErrorLogsPage from './pages/ErrorLogsPage';
 import UnauthorizedPage from './pages/UnauthorizedPage';
 
 import './App.css';
@@ -36,7 +38,9 @@ function App() {
           <Route path="/admin/products" element={<ProductsPage />} />
           <Route path="/admin/vendors" element={<VendorsPage />} />
           <Route path="/admin/categories" element={<CategoriesPage />} />
+          <Route path="/admin/states" element={<StatesPage />} />
           <Route path="/admin/customer-activity-logs" element={<CustomerActivityLogsPage />} />
+          <Route path="/admin/error-logs" element={<ErrorLogsPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/orders" element={<OrdersPage />} />

@@ -40,6 +40,7 @@ const DashboardPage = () => {
   // data
   const [roles, setRoles] = useState([]);
   const [users, setUsers] = useState([]);
+  const [states, setStates] = useState([]);
 
   // ui state
   const [formState, setFormState] = useState(initialFormState);
@@ -101,9 +102,19 @@ const DashboardPage = () => {
     }
   };
 
+  const fetchStates = async () => {
+    try {
+      const { data } = await api.get('/states', { params: { status: 'active' } });
+      setStates(data?.data || []);
+    } catch (error) {
+      console.error('Failed to load states:', error);
+    }
+  };
+
   useEffect(() => {
     fetchRoles();
     fetchUsers();
+    fetchStates();
   }, []);
 
   useEffect(() => {
@@ -555,12 +566,19 @@ const DashboardPage = () => {
             <Col sm={12} md={6}>
               <Form.Group controlId="state">
                 <Form.Label>State</Form.Label>
-                <Form.Control
+                <Form.Select
                   name="state"
                   value={formState.state}
                   onChange={handleChange}
                   disabled={!canManageUsers}
-                />
+                >
+                  <option value="">Select State</option>
+                  {states.map((state) => (
+                    <option key={state._id} value={state.name}>
+                      {state.name} ({state.code})
+                    </option>
+                  ))}
+                </Form.Select>
               </Form.Group>
             </Col>
             <Col sm={12} md={6}>

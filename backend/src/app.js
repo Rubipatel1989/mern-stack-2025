@@ -12,7 +12,9 @@ const invoiceRoutes = require('./routes/invoice.routes');
 const vendorRoutes = require('./routes/vendor.routes');
 const categoryRoutes = require('./routes/category.routes');
 const addressRoutes = require('./routes/address.routes');
+const stateRoutes = require('./routes/state.routes');
 const customerActivityLogRoutes = require('./routes/customerActivityLog.routes');
+const errorLogRoutes = require('./routes/errorLog.routes');
 const notFound = require('./middlewares/notFound');
 const errorHandler = require('./middlewares/errorHandler');
 
@@ -41,7 +43,9 @@ app.use('/api/invoices', invoiceRoutes);
 app.use('/api/vendors', vendorRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/addresses', addressRoutes);
+app.use('/api/states', stateRoutes);
 app.use('/api/customer-activity-logs', customerActivityLogRoutes);
+app.use('/api/error-logs', errorLogRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

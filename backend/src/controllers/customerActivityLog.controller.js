@@ -1,4 +1,5 @@
 const CustomerActivityLog = require('../models/customerActivityLog.model');
+const User = require('../models/user.model');
 const asyncHandler = require('../utils/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
 
@@ -18,9 +19,24 @@ exports.getAllActivityLogs = asyncHandler(async (req, res) => {
 
   const query = {};
 
-  // Filter by user if provided
+  // Filter by user if provided (can be email or ObjectId)
   if (userId) {
-    query.user = userId;
+    // Check if userId is a valid ObjectId format
+    const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(userId);
+    
+    if (isValidObjectId) {
+      // If it's a valid ObjectId, use it directly
+      query.user = userId;
+    } else {
+      // If it's not an ObjectId (likely an email), find user by email first
+      const user = await User.findOne({ email: { $regex: userId, $options: 'i' } }).select('_id');
+      if (user) {
+        query.user = user._id;
+      } else {
+        // If user not found, return empty results
+        query.user = null;
+      }
+    }
   }
 
   // Filter by action if provided
@@ -132,7 +148,21 @@ exports.getActivityStatistics = asyncHandler(async (req, res) => {
 
   const matchQuery = {};
   if (userId) {
-    matchQuery.user = userId;
+    // Check if userId is a valid ObjectId format
+    const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(userId);
+    
+    if (isValidObjectId) {
+      matchQuery.user = userId;
+    } else {
+      // If it's not an ObjectId (likely an email), find user by email first
+      const user = await User.findOne({ email: { $regex: userId, $options: 'i' } }).select('_id');
+      if (user) {
+        matchQuery.user = user._id;
+      } else {
+        // If user not found, return empty results
+        matchQuery.user = null;
+      }
+    }
   }
   if (startDate || endDate) {
     matchQuery.createdAt = {};

@@ -110,22 +110,10 @@ const OrdersPage = () => {
     setError(null);
 
     try {
-      // Add all items from the order to the cart
-      for (const item of order.items || []) {
-        try {
-          // Get productId from item (could be product._id or productId)
-          const productId = item.product?._id || item.productId || item.product;
-          if (productId) {
-            await api.post('/cart/add', {
-              productId,
-              quantity: item.quantity || 1,
-            });
-          }
-        } catch (err) {
-          console.warn(`Failed to add item ${item.name} to cart:`, err);
-          // Continue with other items even if one fails
-        }
-      }
+      // Use the reorder endpoint
+      await api.post('/cart/reorder', {
+        orderId: order._id,
+      });
 
       // Refresh cart count
       refreshCart();

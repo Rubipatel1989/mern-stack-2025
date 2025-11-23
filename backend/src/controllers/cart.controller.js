@@ -1,5 +1,6 @@
 const Cart = require('../models/cart.model');
 const Product = require('../models/product.model');
+const { logCustomActivity } = require('../middlewares/activityLogger');
 const asyncHandler = require('../utils/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
 
@@ -150,6 +151,81 @@ exports.clearCart = asyncHandler(async (req, res) => {
   sendSuccess(res, {
     data: cart,
     message: 'Cart cleared successfully',
+  });
+});
+
+exports.reorder = asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  const { orderId } = req.body;
+
+  if (!orderId) {
+    return sendError(res, {
+      message: 'Order ID is required',
+      statusCode: 400,
+    });
+  }
+
+  const Order = require('../models/order.model');
+  const order = await Order.findById(orderId).populate('items.product');
+
+  if (!order) {
+    return sendError(res, {
+      message: 'Order not found',
+      statusCode: 404,
+    });
+  }
+
+  if (order.user.toString() !== userId) {
+    return sendError(res, {
+      message: 'Unauthorized',
+      statusCode: 403,
+    });
+  }
+
+  let cart = await Cart.findOne({ user: userId });
+  if (!cart) {
+    cart = await Cart.create({ user: userId, items: [] });
+  }
+
+  // Add all items from order to cart
+  for (const orderItem of order.items) {
+    const productId = orderItem.product?._id || orderItem.product;
+    const product = await Product.findById(productId);
+    
+    if (product && product.status === 'active') {
+      const existingItemIndex = cart.items.findIndex(
+        (item) => item.product.toString() === productId.toString()
+      );
+
+      if (existingItemIndex > -1) {
+        cart.items[existingItemIndex].quantity += orderItem.quantity;
+      } else {
+        cart.items.push({
+          product: productId,
+          quantity: orderItem.quantity,
+          price: product.price,
+        });
+      }
+    }
+  }
+
+  await cart.save();
+  await cart.populate('items.product');
+
+  // Log reorder activity
+  await logCustomActivity(userId, 'reorder', {
+    description: `Reordered items from order ${order.orderNumber}`,
+    resourceId: orderId,
+    resourceType: 'order',
+    metadata: {
+      orderNumber: order.orderNumber,
+      itemsCount: order.items.length,
+    },
+  });
+
+  sendSuccess(res, {
+    data: cart,
+    message: 'Items reordered successfully',
   });
 });
 
