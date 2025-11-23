@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Alert, Button, Card, Col, Container, Form, Row } from 'react-bootstrap';
+import { Alert, Button, Card, Col, Container, Form, Row, InputGroup } from 'react-bootstrap';
 import { useNavigate, Navigate, Link, useLocation } from 'react-router-dom';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 
 import { useAuth } from '../context/AuthContext';
 
@@ -14,6 +15,7 @@ const LoginPage = () => {
     password: '',
   });
   const [error, setError] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   if (isAuthenticated) {
     return <Navigate to="/" replace />;
@@ -67,15 +69,24 @@ const LoginPage = () => {
 
                 <Form.Group controlId="password" className="mb-4">
                   <Form.Label>Password</Form.Label>
-                  <Form.Control
-                    type="password"
-                    name="password"
-                    value={formState.password}
-                    placeholder="••••••••"
-                    onChange={handleChange}
-                    required
-                    minLength={6}
-                  />
+                  <InputGroup>
+                    <Form.Control
+                      type={showPassword ? 'text' : 'password'}
+                      name="password"
+                      value={formState.password}
+                      placeholder="••••••••"
+                      onChange={handleChange}
+                      required
+                      minLength={6}
+                    />
+                    <Button
+                      variant="outline-secondary"
+                      onClick={() => setShowPassword(!showPassword)}
+                      style={{ borderLeft: 'none' }}
+                    >
+                      {showPassword ? <FiEyeOff /> : <FiEye />}
+                    </Button>
+                  </InputGroup>
                 </Form.Group>
 
                 <div className="d-grid">

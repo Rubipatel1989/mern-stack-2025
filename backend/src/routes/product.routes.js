@@ -10,12 +10,13 @@ const {
 const authenticate = require('../middlewares/authenticate');
 const { authorizeRoles } = require('../middlewares/authorize');
 const { uploadProductImages } = require('../middlewares/upload');
+const { logActivity } = require('../middlewares/activityLogger');
 
 const router = express.Router();
 
 // Public routes
-router.get('/', getProducts);
-router.get('/:id', getProductById);
+router.get('/', logActivity('filter_products'), getProducts);
+router.get('/:id', logActivity('view_product'), getProductById);
 
 // Protected admin routes
 router.use(authenticate);

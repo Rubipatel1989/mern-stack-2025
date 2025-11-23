@@ -8,19 +8,22 @@ import {
   Spinner,
   Table,
 } from 'react-bootstrap';
-import { FiEye, FiFileText } from 'react-icons/fi';
+import { FiEye, FiFileText, FiShoppingCart } from 'react-icons/fi';
 
 import AppNavbar from '../components/AppNavbar';
 import ProtectedRoute from '../components/ProtectedRoute';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import api from '../api/client';
 
 const OrdersPage = () => {
   const { user, isAuthenticated } = useAuth();
+  const { refreshCart } = useCart();
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [reordering, setReordering] = useState(null);
 
   const isAdmin = user?.role?.name?.toLowerCase() === 'admin' || user?.role?.name?.toLowerCase() === 'superadmin';
 
@@ -97,6 +100,45 @@ const OrdersPage = () => {
     }
   };
 
+  const handleReorder = async (order) => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+
+    setReordering(order._id);
+    setError(null);
+
+    try {
+      // Add all items from the order to the cart
+      for (const item of order.items || []) {
+        try {
+          // Get productId from item (could be product._id or productId)
+          const productId = item.product?._id || item.productId || item.product;
+          if (productId) {
+            await api.post('/cart/add', {
+              productId,
+              quantity: item.quantity || 1,
+            });
+          }
+        } catch (err) {
+          console.warn(`Failed to add item ${item.name} to cart:`, err);
+          // Continue with other items even if one fails
+        }
+      }
+
+      // Refresh cart count
+      refreshCart();
+
+      // Navigate to cart page
+      navigate('/cart');
+    } catch (error) {
+      setError(error.response?.data?.message || error.message || 'Failed to re-order items');
+    } finally {
+      setReordering(null);
+    }
+  };
+
   if (loading) {
     return (
       <>
@@ -166,7 +208,7 @@ const OrdersPage = () => {
                         <td>${order.total?.toFixed(2) || '0.00'}</td>
                         <td>{getStatusBadge(order.status)}</td>
                         <td>
-                          <div className="d-flex gap-2">
+                          <div className="d-flex gap-2 flex-wrap">
                             <Button
                               size="sm"
                               variant="outline-primary"
@@ -175,6 +217,21 @@ const OrdersPage = () => {
                             >
                               <FiEye />
                             </Button>
+                            {!isAdmin && order.status === 'delivered' && (
+                              <Button
+                                size="sm"
+                                variant="outline-info"
+                                onClick={() => handleReorder(order)}
+                                title="Re-order"
+                                disabled={reordering === order._id}
+                              >
+                                {reordering === order._id ? (
+                                  <Spinner animation="border" size="sm" />
+                                ) : (
+                                  <FiShoppingCart />
+                                )}
+                              </Button>
+                            )}
                             {order.status !== 'pending' && order.status !== 'cancelled' && (
                               <>
                                 <Button
@@ -182,7 +239,6 @@ const OrdersPage = () => {
                                   variant="outline-success"
                                   onClick={() => handleViewInvoice(order._id)}
                                   title="View Invoice"
-                                  className="me-1"
                                 >
                                   <FiFileText />
                                 </Button>

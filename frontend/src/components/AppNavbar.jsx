@@ -60,6 +60,7 @@ const AppNavbar = () => {
                 <Nav.Link onClick={() => navigate('/admin/products')}>Products</Nav.Link>
                 <Nav.Link onClick={() => navigate('/admin/vendors')}>Vendors</Nav.Link>
                 <Nav.Link onClick={() => navigate('/admin/categories')}>Categories</Nav.Link>
+                <Nav.Link onClick={() => navigate('/admin/customer-activity-logs')}>Activity Logs</Nav.Link>
               </>
             )}
                   {user && (

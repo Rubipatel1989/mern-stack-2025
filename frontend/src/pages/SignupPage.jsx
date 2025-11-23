@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Alert, Button, Card, Col, Container, Form, Row } from 'react-bootstrap';
+import { Alert, Button, Card, Col, Container, Form, Row, InputGroup } from 'react-bootstrap';
 import { useNavigate, Link } from 'react-router-dom';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 
 import { useAuth } from '../context/AuthContext';
 import api from '../api/client';
@@ -25,6 +26,8 @@ const SignupPage = () => {
   });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   if (isAuthenticated) {
     return <navigate to="/" replace />;
@@ -77,7 +80,7 @@ const SignupPage = () => {
     if (Object.keys(payload.address).length === 0) delete payload.address;
 
     try {
-      const { data } = await api.post('/auth/register', payload);
+      await api.post('/auth/register', payload);
       // Auto login after signup
       await login({ email: formState.email, password: formState.password });
       navigate('/', { replace: true });
@@ -127,28 +130,46 @@ const SignupPage = () => {
 
                 <Form.Group controlId="password" className="mb-3">
                   <Form.Label>Password *</Form.Label>
-                  <Form.Control
-                    type="password"
-                    name="password"
-                    value={formState.password}
-                    placeholder="At least 6 characters"
-                    onChange={handleChange}
-                    required
-                    minLength={6}
-                  />
+                  <InputGroup>
+                    <Form.Control
+                      type={showPassword ? 'text' : 'password'}
+                      name="password"
+                      value={formState.password}
+                      placeholder="At least 6 characters"
+                      onChange={handleChange}
+                      required
+                      minLength={6}
+                    />
+                    <Button
+                      variant="outline-secondary"
+                      onClick={() => setShowPassword(!showPassword)}
+                      style={{ borderLeft: 'none' }}
+                    >
+                      {showPassword ? <FiEyeOff /> : <FiEye />}
+                    </Button>
+                  </InputGroup>
                 </Form.Group>
 
                 <Form.Group controlId="confirmPassword" className="mb-3">
                   <Form.Label>Confirm Password *</Form.Label>
-                  <Form.Control
-                    type="password"
-                    name="confirmPassword"
-                    value={formState.confirmPassword}
-                    placeholder="Confirm your password"
-                    onChange={handleChange}
-                    required
-                    minLength={6}
-                  />
+                  <InputGroup>
+                    <Form.Control
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      name="confirmPassword"
+                      value={formState.confirmPassword}
+                      placeholder="Confirm your password"
+                      onChange={handleChange}
+                      required
+                      minLength={6}
+                    />
+                    <Button
+                      variant="outline-secondary"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      style={{ borderLeft: 'none' }}
+                    >
+                      {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
+                    </Button>
+                  </InputGroup>
                 </Form.Group>
 
                 <Form.Group controlId="phone" className="mb-3">

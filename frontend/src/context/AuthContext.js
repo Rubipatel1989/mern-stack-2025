@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react';
 
 import api, { setAuthToken } from '../api/client';
 
@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const login = async (credentials) => {
+  const login = useCallback(async (credentials) => {
     setLoading(true);
     setAuthError(null);
     try {
@@ -84,6 +84,9 @@ export const AuthProvider = ({ children }) => {
         }
       }
       
+      // Dispatch event to refresh cart count after merge
+      window.dispatchEvent(new Event('cart:refresh'));
+      
       return data;
     } catch (error) {
       setAuthError(error.message);
@@ -91,9 +94,9 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       if (token) {
         await api.post('/auth/logout');
@@ -103,7 +106,7 @@ export const AuthProvider = ({ children }) => {
     } finally {
       persistAuth({ token: null, user: null });
     }
-  };
+  }, [token]);
 
   const value = useMemo(
     () => ({
@@ -116,7 +119,7 @@ export const AuthProvider = ({ children }) => {
       logout,
       setUser: (nextUser) => persistAuth({ token, user: nextUser }),
     }),
-    [token, user, loading, authError]
+    [token, user, loading, authError, login, logout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

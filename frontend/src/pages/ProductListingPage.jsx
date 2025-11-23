@@ -38,14 +38,24 @@ const ProductListingPage = () => {
         page,
         limit: pagination.limit,
         status: 'active',
-        ...filters,
       };
 
-      if (!params.search) delete params.search;
-      if (!params.category) delete params.category;
-      if (!params.minPrice) delete params.minPrice;
-      if (!params.maxPrice) delete params.maxPrice;
-      if (!params.featured) delete params.featured;
+      // Only include non-empty filter values
+      if (filters.search && filters.search.trim()) {
+        params.search = filters.search.trim();
+      }
+      if (filters.category && filters.category.trim()) {
+        params.category = filters.category.trim();
+      }
+      if (filters.minPrice && filters.minPrice > 0) {
+        params.minPrice = filters.minPrice;
+      }
+      if (filters.maxPrice && filters.maxPrice > 0) {
+        params.maxPrice = filters.maxPrice;
+      }
+      if (filters.featured) {
+        params.featured = filters.featured;
+      }
 
       const { data } = await api.get('/products', { params });
       setProducts(data?.data || []);
@@ -53,6 +63,7 @@ const ProductListingPage = () => {
     } catch (error) {
       if (error.response?.status === 404) {
         setProducts([]);
+        setPagination({ ...pagination, total: 0, pages: 0 });
       } else {
         console.error('Error fetching products:', error);
       }
@@ -61,8 +72,13 @@ const ProductListingPage = () => {
     }
   };
 
+  // Debounce filter changes to avoid too many API calls
   useEffect(() => {
-    fetchProducts(1);
+    const timer = setTimeout(() => {
+      fetchProducts(1);
+    }, 500); // Wait 500ms after user stops typing
+
+    return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
 

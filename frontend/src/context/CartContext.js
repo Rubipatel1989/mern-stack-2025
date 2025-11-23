@@ -54,7 +54,31 @@ export const CartProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    fetchCartCount();
+    if (isAuthenticated) {
+      // Add a small delay to allow cart merge to complete after login
+      const timer = setTimeout(() => {
+        fetchCartCount();
+      }, 500);
+      return () => clearTimeout(timer);
+    } else {
+      fetchCartCount();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
+
+  // Also listen for custom event to refresh cart after merge
+  useEffect(() => {
+    const handleCartRefresh = () => {
+      if (isAuthenticated) {
+        fetchCartCount();
+      }
+    };
+    
+    window.addEventListener('cart:refresh', handleCartRefresh);
+    return () => {
+      window.removeEventListener('cart:refresh', handleCartRefresh);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
 
   const refreshCart = () => {

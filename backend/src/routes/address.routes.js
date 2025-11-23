@@ -8,6 +8,7 @@ const {
   setDefaultAddress,
 } = require('../controllers/address.controller');
 const authenticate = require('../middlewares/authenticate');
+const { logActivity } = require('../middlewares/activityLogger');
 
 const router = express.Router();
 
@@ -15,13 +16,13 @@ const router = express.Router();
 router.use(authenticate);
 
 router.route('/')
-  .get(getMyAddresses)
-  .post(createAddress);
+  .get(logActivity('view_addresses'), getMyAddresses)
+  .post(logActivity('add_address'), createAddress);
 
 router.route('/:id')
-  .get(getAddressById)
-  .put(updateAddress)
-  .delete(deleteAddress);
+  .get(logActivity('view_addresses'), getAddressById)
+  .put(logActivity('update_address'), updateAddress)
+  .delete(logActivity('delete_address'), deleteAddress);
 
 router.put('/:id/default', setDefaultAddress);
 

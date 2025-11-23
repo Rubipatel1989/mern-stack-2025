@@ -142,11 +142,25 @@ exports.getProducts = asyncHandler(async (req, res) => {
 
   const query = {};
 
+  // Handle category filter - search by category name or ID
   if (category) {
+    const Category = require('../models/category.model');
     if (mongoose.Types.ObjectId.isValid(category)) {
+      // If it's a valid ObjectId, use it directly
       query.category = category;
     } else {
-      query.category = new RegExp(category, 'i');
+      // Search for categories by name (case-insensitive partial match)
+      const matchingCategories = await Category.find({
+        name: { $regex: category, $options: 'i' }
+      }).select('_id').lean();
+      
+      if (matchingCategories.length > 0) {
+        // Use the found category IDs
+        query.category = { $in: matchingCategories.map(cat => cat._id) };
+      } else {
+        // No matching categories found, return empty result
+        query.category = { $in: [] };
+      }
     }
   }
 
@@ -158,8 +172,13 @@ exports.getProducts = asyncHandler(async (req, res) => {
     query.featured = featured === 'true';
   }
 
+  // Handle search - use regex on name and description instead of $text
   if (search) {
-    query.$text = { $search: search };
+    query.$or = [
+      { name: { $regex: search, $options: 'i' } },
+      { description: { $regex: search, $options: 'i' } },
+      { tags: { $regex: search, $options: 'i' } }
+    ];
   }
 
   if (minPrice !== undefined || maxPrice !== undefined) {

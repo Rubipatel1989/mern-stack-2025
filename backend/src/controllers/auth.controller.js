@@ -5,6 +5,7 @@ const Role = require('../models/role.model');
 const asyncHandler = require('../utils/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
 const { generateToken } = require('../utils/token');
+const { logCustomActivity } = require('../middlewares/activityLogger');
 
 const buildTokenPayload = (user) => ({
   sub: user.id,
@@ -46,6 +47,18 @@ exports.login = asyncHandler(async (req, res) => {
 
   const token = generateToken(buildTokenPayload(user));
 
+  // Log login activity (only for customers)
+  const userRole = user.role?.name || user.role || '';
+  const isCustomer = userRole.toLowerCase() === 'customer';
+  
+  if (isCustomer && user._id) {
+    logCustomActivity(user._id, 'login', {
+      ipAddress: req.ip || req.connection.remoteAddress,
+      userAgent: req.get('user-agent'),
+      description: 'User logged in',
+    });
+  }
+
   sendSuccess(res, {
     message: 'Login successful',
     data: {
@@ -56,6 +69,20 @@ exports.login = asyncHandler(async (req, res) => {
 });
 
 exports.logout = asyncHandler(async (req, res) => {
+  // Log logout activity (only for customers)
+  if (req.user && req.user._id) {
+    const userRole = req.user.role?.name || req.user.role || '';
+    const isCustomer = userRole.toLowerCase() === 'customer';
+    
+    if (isCustomer) {
+      logCustomActivity(req.user._id, 'logout', {
+        ipAddress: req.ip || req.connection.remoteAddress,
+        userAgent: req.get('user-agent'),
+        description: 'User logged out',
+      });
+    }
+  }
+
   sendSuccess(res, {
     message: 'Logout successful. Please discard the token on client side.',
     data: null,
